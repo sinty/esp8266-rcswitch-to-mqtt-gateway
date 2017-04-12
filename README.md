@@ -8,6 +8,8 @@ RC-Switch https://github.com/sui77/rc-switch
 
 ![Hardware image](./rc-switch_to_mqtt_gate_hardware.jpg)
 
+Radio module Telecontrolli RR10 http://www.telecontrolli.com/catalogue/product/rr10.html
+
 Home assistant integration example:
 ```
 automation:

@@ -50,11 +50,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   // Switch on the LED if an 1 was received as first character
   if ((char)payload[0] == '1') {
-//    digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
+    //    digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
     // but actually the LED is on; this is because
     // it is acive low on the ESP-01)
   } else {
-//    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
+    //    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
   }
 
 }
@@ -96,43 +96,45 @@ void setup() {
 unsigned long lastReceivedValue = 0;
 long lastReceivingTime = 0;
 
+int loop_count = 0;
 
 void loop() {
-
+  yield();
   if (!client.connected()) {
     reconnect();
   }
   client.loop();
+  yield();
 
   if (mySwitch.available()) {
     digitalWrite(BUILTIN_LED, LOW);
     long now = millis();
-    if(mySwitch.getReceivedValue() == lastReceivedValue &&
-       now - lastReceivingTime < 800){
-        // Ignore
-        lastReceivingTime = now;
-        //Serial.println(now - lastReceivingTime);
-        //Serial.println("    Repeat last command");
-       } else {
-        //Serial.println(now - lastReceivingTime);
-        lastReceivedValue = mySwitch.getReceivedValue();
-        lastReceivingTime = now;
-        snprintf (msg, 75, "%ld", lastReceivedValue);
-        //Serial.print("Publish message: ");
-        //Serial.println(msg);
-        client.publish("rcswitch/value", msg);
-       }
-       digitalWrite(BUILTIN_LED, HIGH);
+    if (mySwitch.getReceivedValue() == lastReceivedValue &&
+        now - lastReceivingTime < 800) {
+      // Ignore
+      lastReceivingTime = now;
+      //Serial.println(now - lastReceivingTime);
+      //Serial.println("    Repeat last command");
+    } else {
+      //Serial.println(now - lastReceivingTime);
+      lastReceivedValue = mySwitch.getReceivedValue();
+      lastReceivingTime = now;
+      snprintf (msg, sizeof(msg), "%ld", lastReceivedValue);
+      //Serial.print("Publish message: ");
+      //Serial.println(msg);
+      client.publish("rcswitch/value", msg);
+    }
+    digitalWrite(BUILTIN_LED, HIGH);
     mySwitch.resetAvailable();
+  } else {
+    if (loop_count >= 12) {
+      loop_count = 0;
+      long now = millis();
+      snprintf (msg, sizeof(msg), "%ld", now);
+      client.publish("rcswitch/ping", msg);
+    }
   }
-
-//  long now = millis();
-//  if (now - lastMsg > 2000) {
-//    lastMsg = now;
-//    ++value;
-//    snprintf (msg, 75, "hello world #%ld", value);
-//    //Serial.print("Publish message: ");
-//    //Serial.println(msg);
-//    client.publish("rcswitch/value", "1234567890");
-//  }
+  yield();
+  loop_count++;
+  delay(50);
 }
